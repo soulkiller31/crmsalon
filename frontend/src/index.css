@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-dark-700;
+  }
+
+  body {
+    @apply bg-dark-950 text-dark-100;
+  }
+
+  input, select, textarea {
+    @apply bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-dark-100
+           placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent
+           transition-colors w-full;
+  }
+
+  button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium
+           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-950;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-hover focus:ring-accent;
+  }
+
+  .btn-secondary {
+    @apply btn bg-dark-700 text-dark-100 hover:bg-dark-600 focus:ring-dark-500;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-dark-300 hover:bg-dark-800 hover:text-dark-100;
+  }
+
+  .card {
+    @apply bg-dark-900 border border-dark-700 rounded-xl p-6 shadow-lg;
+  }
+
+  .stat-card {
+    @apply card flex flex-col gap-2 hover:border-dark-600 transition-colors;
+  }
+
+  .table-container {
+    @apply overflow-x-auto rounded-xl border border-dark-700;
+  }
+
+  .data-table {
+    @apply w-full text-sm text-left;
+  }
+
+  .data-table thead {
+    @apply bg-dark-800 text-dark-300 uppercase text-xs tracking-wider;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 font-semibold;
+  }
+
+  .data-table td {
+    @apply px-4 py-3 border-t border-dark-700;
+  }
+
+  .data-table tbody tr {
+    @apply hover:bg-dark-800/50 transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-900/50 text-emerald-400 border border-emerald-800;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-900/50 text-red-400 border border-red-800;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-900/50 text-amber-400 border border-amber-800;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-900/50 text-blue-400 border border-blue-800;
+  }
+
+  .page-header {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-dark-50;
+  }
+
+  .form-group {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .form-label {
+    @apply text-sm font-medium text-dark-300;
+  }
+
+  .form-error {
+    @apply text-xs text-red-400 mt-1;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-dark-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-500;
+}

@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: salon-crm-api
+    runtime: node
+    region: singapore
+    plan: starter
+    buildCommand: cd backend && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npm install && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npm run install:chrome
+    startCommand: cd backend && PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
+      - key: FRONTEND_URLS
+        sync: false
+      - key: SALON_NAME
+        value: Your Salon
+      - key: CRON_TIMEZONE
+        value: Asia/Kolkata
+      - key: AUTO_INIT_WHATSAPP
+        value: "true"
+      - key: WHATSAPP_RECONNECT_DELAY_MS
+        value: "30000"
+      - key: WHATSAPP_SESSION_PATH
+        value: ./.wwebjs_auth
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/.cache/puppeteer
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        value: Salon Admin
+    disk:
+      name: whatsapp-session
+      mountPath: /opt/render/project/src/backend/.wwebjs_auth
+      sizeGB: 1
