@@ -15,7 +15,7 @@ services:
     container_name: salon-crm-backend
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - /docker/crmsalon/backend/.env
     environment:
       - NODE_ENV=production
       - WHATSAPP_SESSION_PATH=/app/.wwebjs_auth
@@ -26,7 +26,7 @@ services:
       # Persist WhatsApp session across container restarts
       - whatsapp_session:/app/.wwebjs_auth
       # Persist logs
-      - ./logs/backend:/var/log/salon-crm
+      - /docker/crmsalon/logs/backend:/var/log/salon-crm
     # Chrome needs these for headless on Linux
     security_opt:
       - seccomp:unconfined
@@ -73,9 +73,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.docker.conf:/etc/nginx/nginx.conf:ro
+      - /docker/crmsalon/nginx.docker.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./logs/nginx:/var/log/nginx
+      - /docker/crmsalon/logs/nginx:/var/log/nginx
     depends_on:
       - frontend
       - backend
