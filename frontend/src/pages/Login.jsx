@@ -14,11 +14,11 @@ function getLoginErrorMessage(err) {
   const baseURL = err.config?.baseURL;
 
   if (!err.response) {
-    return 'Cannot reach the API server. Check VITE_API_URL on Vercel and FRONTEND_URL or FRONTEND_URLS on Render.';
+    return 'Cannot reach the API server. Check the frontend API URL and confirm the VPS is running.';
   }
 
   if (isHtmlResponse || baseURL === '/api') {
-    return 'Frontend API is not configured correctly. Set VITE_API_URL on Vercel to your Render URL ending with /api and redeploy.';
+    return 'Frontend API is not configured correctly. Set VITE_API_URL to your backend URL ending with /api and redeploy.';
   }
 
   return 'Login failed';
