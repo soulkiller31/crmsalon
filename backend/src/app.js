@@ -21,14 +21,7 @@ const isAllowedOrigin = (origin) => {
   if (!origin) return true;
   if (allowedOrigins.has(origin)) return true;
   if (origin.startsWith('http://localhost:')) return true;
-
-  // Vercel preview deployments use per-build subdomains, so allow them in production.
-  try {
-    const { hostname, protocol } = new URL(origin);
-    return protocol === 'https:' && hostname.endsWith('.vercel.app');
-  } catch {
-    return false;
-  }
+  return false;
 };
 
 app.use(helmet());

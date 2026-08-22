@@ -11,13 +11,11 @@ function getLoginErrorMessage(err) {
 
   const contentType = err.response?.headers?.['content-type'] || '';
   const isHtmlResponse = typeof contentType === 'string' && contentType.includes('text/html');
-  const baseURL = err.config?.baseURL;
-
   if (!err.response) {
     return 'Cannot reach the API server. Check the frontend API URL and confirm the VPS is running.';
   }
 
-  if (isHtmlResponse || baseURL === '/api') {
+  if (isHtmlResponse) {
     return 'Frontend API is not configured correctly. Set VITE_API_URL to your backend URL ending with /api and redeploy.';
   }
 
