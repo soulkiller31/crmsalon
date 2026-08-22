@@ -1,7 +1,7 @@
 # ── Backend Dockerfile ──────────────────────────────────────
 # Node.js 20 on Debian slim + Google Chrome for Puppeteer/WhatsApp
 
-FROM node:20-slim
+FROM node:22-slim
 
 # Install Chrome dependencies + Chrome itself
 RUN apt-get update && apt-get install -y \

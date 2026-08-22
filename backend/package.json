@@ -12,7 +12,7 @@
     "install:chrome": "node -e \"const { execSync } = require('child_process'); const { existsSync } = require('fs'); const cli = 'node_modules/puppeteer/lib/cjs/puppeteer/node/cli.js'; const cmd = existsSync(cli) ? ('node ' + cli + ' browsers install chrome-headless-shell') : 'npx -y puppeteer@24.38.0 browsers install chrome-headless-shell'; try { execSync(cmd, { stdio: 'inherit' }); } catch (error) { console.warn('chrome-headless-shell install skipped or failed:', error.message); }\""
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

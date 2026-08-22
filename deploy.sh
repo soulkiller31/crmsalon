@@ -120,9 +120,9 @@ fi
 
 # ── PM2 (bare metal) mode ─────────────────────────────────
 echo ""
-echo "[3/11] Installing Node.js 20..."
+echo "[3/11] Installing Node.js 22..."
 if ! command -v node &> /dev/null || [[ "$(node --version)" != v20* ]]; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>/dev/null
+  curl -fsSL https://deb.nodesource.com/setup_22.x | bash - 2>/dev/null
   apt-get install -y nodejs
 fi
 echo "  Node: $(node --version)  npm: $(npm --version)"
