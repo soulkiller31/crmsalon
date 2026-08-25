@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { invoiceAPI } from '../services/api';
 
 const emptyItem = { description: '', quantity: 1, price: 0 };
-const emptyCustomer = { name: '', phone: '', email: '', address: '', gender: '' };
+const emptyCustomer = { name: '', phone: '', birthday: '', anniversary: '', address: '', gender: '' };
 
 const CATALOGUE = [
   { cat: 'Waxing (Rica)', name: 'Full Body Wax - Rica', price: 2500 },
@@ -344,8 +344,12 @@ export default function Invoice() {
                   <input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
+                  <label className="form-label">DOB</label>
+                  <input type="date" value={customer.birthday} onChange={(e) => setCustomer({ ...customer, birthday: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Anniversary</label>
+                  <input type="date" value={customer.anniversary} onChange={(e) => setCustomer({ ...customer, anniversary: e.target.value })} />
                 </div>
                 <div className="form-group sm:col-span-2">
                   <label className="form-label">Address</label>
@@ -451,7 +455,6 @@ export default function Invoice() {
             <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Bill To</p>
             <p className="font-semibold">{customer.name || '-'}</p>
             <p className="text-sm text-gray-600">{customer.phone || '-'}</p>
-            {customer.email && <p className="text-sm text-gray-600">{customer.email}</p>}
             {customer.address && <p className="text-sm text-gray-600 mt-1">{customer.address}</p>}
           </div>
           <table className="w-full text-sm mb-4">

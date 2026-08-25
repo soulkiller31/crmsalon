@@ -73,6 +73,10 @@ export const invoiceAPI = {
   saveAndSend: (data) => api.post('/invoices/save-and-send', data),
   downloadPdf: (id) => api.get(`/invoices/${id}/pdf`, { responseType: 'blob' }),
   resend: (id, phone) => api.post(`/invoices/${id}/resend`, { phone }),
+  getReport: (params) => api.get('/invoices/report', { params }),
+  exportReport: (params) => api.get('/invoices/report/export', { params, responseType: 'blob' }),
+  getBusinessReport: (params) => api.get('/invoices/business-report', { params }),
+  exportBusinessReport: (params) => api.get('/invoices/business-report/export', { params, responseType: 'blob' }),
 };
 
 export const whatsappAPI = {

@@ -313,3 +313,216 @@ export const resendInvoicePdf = asyncHandler(async (req, res) => {
     try { fs.unlinkSync(tmpPdfPath); } catch { /* ignore */ }
   }
 });
+
+export const getInvoiceReport = asyncHandler(async (req, res) => {
+  const { filter = 'month', start, end } = req.query;
+
+  const VALID = ['today', 'month', 'all', 'custom'];
+  if (!VALID.includes(filter)) {
+    throw new AppError(`Invalid filter "${filter}". Must be one of: ${VALID.join(', ')}`, 400);
+  }
+
+  if (filter === 'custom' && (!start || !end)) {
+    throw new AppError('start and end query params are required when filter=custom', 400);
+  }
+
+  const rows = await InvoiceModel.getReport({ filter, start, end });
+  res.json({ success: true, data: rows });
+});
+
+export const exportVisitReport = asyncHandler(async (req, res) => {
+  const { filter = 'month', start, end } = req.query;
+
+  const VALID = ['today', 'month', 'all', 'custom'];
+  if (!VALID.includes(filter)) throw new AppError(`Invalid filter "${filter}"`, 400);
+  if (filter === 'custom' && (!start || !end)) throw new AppError('start and end required when filter=custom', 400);
+
+  const rows = await InvoiceModel.getReport({ filter, start, end });
+
+  // Build Excel using xlsx (already installed)
+  const { utils, write } = await import('xlsx');
+
+  const wsData = [
+    ['S.No', 'Customer Name', 'Phone', 'DOB', 'Anniversary', 'Services', 'Amount (Rs.)', 'Visit Date'],
+    ...rows.map((row, i) => [
+      i + 1,
+      row.customer_name,
+      row.customer_phone,
+      row.birthday || '',
+      row.anniversary || '',
+      (row.items || []).map(item => item.description).join(', '),
+      Number(row.total),
+      new Date(row.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    ]),
+  ];
+
+  const ws = utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [
+    { wch: 6 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+    { wch: 40 }, { wch: 14 }, { wch: 14 },
+  ];
+
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, 'Visit Report');
+
+  const buf = write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const dateStr = new Date().toISOString().split('T')[0];
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="visit-report-${dateStr}.xlsx"`);
+  res.send(buf);
+});
+
+export const getBusinessReport = asyncHandler(async (req, res) => {
+  const { filter = 'month', start, end } = req.query;
+
+  const VALID = ['today', 'month', 'all', 'custom'];
+  if (!VALID.includes(filter)) throw new AppError(`Invalid filter "${filter}"`, 400);
+  if (filter === 'custom' && (!start || !end)) throw new AppError('start and end required when filter=custom', 400);
+
+  const rows = await InvoiceModel.getReport({ filter, start, end });
+
+  // Total revenue and visits
+  const totalRevenue = rows.reduce((sum, r) => sum + Number(r.total), 0);
+  const totalVisits = rows.length;
+  const avgPerVisit = totalVisits > 0 ? totalRevenue / totalVisits : 0;
+
+  // Unique customers
+  const uniqueCustomers = new Set(rows.map(r => r.customer_phone)).size;
+
+  // Top services — count how many times each service appears
+  const serviceCount = {};
+  rows.forEach(row => {
+    (row.items || []).forEach(item => {
+      const name = item.description || 'Unknown';
+      serviceCount[name] = (serviceCount[name] || 0) + 1;
+    });
+  });
+  const topServices = Object.entries(serviceCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  // Top customers by revenue
+  const customerRevenue = {};
+  const customerVisits = {};
+  rows.forEach(row => {
+    const key = row.customer_phone;
+    customerRevenue[key] = (customerRevenue[key] || 0) + Number(row.total);
+    customerVisits[key] = (customerVisits[key] || 0) + 1;
+    // Store name alongside phone
+    if (!customerRevenue[`${key}_name`]) customerRevenue[`${key}_name`] = row.customer_name;
+  });
+  const topCustomers = Object.entries(customerRevenue)
+    .filter(([key]) => !key.endsWith('_name'))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([phone, revenue]) => ({
+      name: customerRevenue[`${phone}_name`] || phone,
+      phone,
+      revenue: Math.round(revenue * 100) / 100,
+      visits: customerVisits[phone] || 0,
+    }));
+
+  // Daily revenue breakdown (for charts — group by date)
+  const dailyRevenue = {};
+  rows.forEach(row => {
+    const date = row.created_at.split('T')[0];
+    dailyRevenue[date] = (dailyRevenue[date] || 0) + Number(row.total);
+  });
+  const dailyBreakdown = Object.entries(dailyRevenue)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, revenue]) => ({
+      date,
+      revenue: Math.round(revenue * 100) / 100,
+      label: new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+    }));
+
+  res.json({
+    success: true,
+    data: {
+      summary: {
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalVisits,
+        uniqueCustomers,
+        avgPerVisit: Math.round(avgPerVisit * 100) / 100,
+      },
+      topServices,
+      topCustomers,
+      dailyBreakdown,
+    },
+  });
+});
+
+export const exportBusinessReport = asyncHandler(async (req, res) => {
+  const { filter = 'month', start, end } = req.query;
+
+  const VALID = ['today', 'month', 'all', 'custom'];
+  if (!VALID.includes(filter)) throw new AppError(`Invalid filter "${filter}"`, 400);
+  if (filter === 'custom' && (!start || !end)) throw new AppError('start and end required when filter=custom', 400);
+
+  const rows = await InvoiceModel.getReport({ filter, start, end });
+  const { utils, write } = await import('xlsx');
+
+  // Sheet 1: Summary
+  const totalRevenue = rows.reduce((sum, r) => sum + Number(r.total), 0);
+  const totalVisits = rows.length;
+  const uniqueCustomers = new Set(rows.map(r => r.customer_phone)).size;
+  const avgPerVisit = totalVisits > 0 ? totalRevenue / totalVisits : 0;
+
+  const summaryData = [
+    ['Metric', 'Value'],
+    ['Total Revenue (Rs.)', Math.round(totalRevenue * 100) / 100],
+    ['Total Visits', totalVisits],
+    ['Unique Customers', uniqueCustomers],
+    ['Avg per Visit (Rs.)', Math.round(avgPerVisit * 100) / 100],
+    ['Period', filter === 'custom' ? `${start} to ${end}` : filter],
+    ['Generated On', new Date().toLocaleDateString('en-IN')],
+  ];
+
+  // Sheet 2: Top Services
+  const serviceCount = {};
+  rows.forEach(row => {
+    (row.items || []).forEach(item => {
+      const name = item.description || 'Unknown';
+      serviceCount[name] = (serviceCount[name] || 0) + 1;
+    });
+  });
+  const topServices = Object.entries(serviceCount).sort((a, b) => b[1] - a[1]);
+  const servicesData = [
+    ['Service Name', 'Count'],
+    ...topServices.map(([name, count]) => [name, count]),
+  ];
+
+  // Sheet 3: Top Customers
+  const customerRevenue = {};
+  const customerVisits = {};
+  rows.forEach(row => {
+    const key = row.customer_phone;
+    customerRevenue[key] = (customerRevenue[key] || 0) + Number(row.total);
+    customerVisits[key] = (customerVisits[key] || 0) + 1;
+    if (!customerRevenue[`${key}_name`]) customerRevenue[`${key}_name`] = row.customer_name;
+  });
+  const topCustomersData = [
+    ['Customer Name', 'Phone', 'Total Revenue (Rs.)', 'Visits'],
+    ...Object.entries(customerRevenue)
+      .filter(([key]) => !key.endsWith('_name'))
+      .sort((a, b) => b[1] - a[1])
+      .map(([phone, revenue]) => [
+        customerRevenue[`${phone}_name`] || phone,
+        phone,
+        Math.round(revenue * 100) / 100,
+        customerVisits[phone] || 0,
+      ]),
+  ];
+
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, utils.aoa_to_sheet(summaryData), 'Summary');
+  utils.book_append_sheet(wb, utils.aoa_to_sheet(servicesData), 'Top Services');
+  utils.book_append_sheet(wb, utils.aoa_to_sheet(topCustomersData), 'Top Customers');
+
+  const buf = write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const dateStr = new Date().toISOString().split('T')[0];
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="business-report-${dateStr}.xlsx"`);
+  res.send(buf);
+});

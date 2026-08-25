@@ -10,6 +10,10 @@ router.use(authenticate);
 
 router.get('/next-number', invoiceController.getNextInvoiceNumber);
 router.get('/', invoiceController.getInvoices);
+router.get('/report', invoiceController.getInvoiceReport);
+router.get('/report/export', invoiceController.exportVisitReport);
+router.get('/business-report', invoiceController.getBusinessReport);
+router.get('/business-report/export', invoiceController.exportBusinessReport);
 router.get('/:id/pdf', invoiceController.downloadInvoicePdf);
 router.post('/:id/resend', invoiceController.resendInvoicePdf);
 router.get('/:id', invoiceController.getInvoice);
