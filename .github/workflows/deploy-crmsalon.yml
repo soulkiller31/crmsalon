@@ -1,0 +1,36 @@
+name: Deploy Salon CRM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: salon-crm-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy latest main branch
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || '22' }}
+          command_timeout: 20m
+          script_stop: true
+          script: |
+            set -e
+            cd /docker/crmsalon
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            docker compose build backend frontend
+            docker compose up -d --force-recreate --remove-orphans
+            docker compose ps
