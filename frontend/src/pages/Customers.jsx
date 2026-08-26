@@ -126,12 +126,14 @@ function BusinessReportView() {
       ) : (
         <div className="space-y-4">
           {/* Summary cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { label: 'Total Revenue', value: fmt(report.summary.totalRevenue), icon: '₹', color: 'text-green-400' },
               { label: 'Total Visits', value: report.summary.totalVisits, icon: '🏪', color: 'text-blue-400' },
               { label: 'Unique Customers', value: report.summary.uniqueCustomers, icon: '👤', color: 'text-purple-400' },
               { label: 'Avg per Visit', value: fmt(report.summary.avgPerVisit), icon: '📊', color: 'text-accent' },
+              { label: 'Cash Revenue', value: fmt(report.summary.cashRevenue ?? 0), icon: '💵', color: 'text-yellow-400' },
+              { label: 'Online Revenue', value: fmt(report.summary.onlineRevenue ?? 0), icon: '📱', color: 'text-blue-300' },
             ].map(({ label, value, icon, color }) => (
               <div key={label} className="card">
                 <div className="flex items-start justify-between mb-1">
@@ -142,6 +144,53 @@ function BusinessReportView() {
               </div>
             ))}
           </div>
+
+          {/* Payment Method Split */}
+          {((report.summary.cashCount ?? 0) + (report.summary.onlineCount ?? 0)) > 0 && (
+            <div className="card">
+              <h3 className="text-sm font-semibold text-dark-100 mb-3">Payment Method Split</h3>
+              <div className="space-y-3">
+                {/* Cash */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-dark-300 flex items-center gap-1">💵 Cash</span>
+                    <span className="text-yellow-400 font-semibold">
+                      {report.summary.cashCount ?? 0} payments &nbsp;·&nbsp; {fmt(report.summary.cashRevenue ?? 0)}
+                    </span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-dark-700 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-yellow-400 transition-all duration-500"
+                      style={{
+                        width: `${((report.summary.cashCount ?? 0) + (report.summary.onlineCount ?? 0)) > 0
+                          ? ((report.summary.cashCount ?? 0) / ((report.summary.cashCount ?? 0) + (report.summary.onlineCount ?? 0))) * 100
+                          : 0}%`
+                      }}
+                    />
+                  </div>
+                </div>
+                {/* Online */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-dark-300 flex items-center gap-1">📱 Online</span>
+                    <span className="text-blue-400 font-semibold">
+                      {report.summary.onlineCount ?? 0} payments &nbsp;·&nbsp; {fmt(report.summary.onlineRevenue ?? 0)}
+                    </span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-dark-700 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-blue-400 transition-all duration-500"
+                      style={{
+                        width: `${((report.summary.cashCount ?? 0) + (report.summary.onlineCount ?? 0)) > 0
+                          ? ((report.summary.onlineCount ?? 0) / ((report.summary.cashCount ?? 0) + (report.summary.onlineCount ?? 0))) * 100
+                          : 0}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Top Services */}
@@ -387,6 +436,7 @@ function CustomerReportView() {
                   <th>Anniversary</th>
                   <th>Services</th>
                   <th className="text-right">Amount</th>
+                  <th>Payment</th>
                   <th>Visit Date</th>
                 </tr>
               </thead>
@@ -405,6 +455,15 @@ function CustomerReportView() {
                       {(row.items || []).map((i) => i.description).join(', ') || '—'}
                     </td>
                     <td className="text-right font-semibold text-accent">{formatAmount(row.total)}</td>
+                    <td>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${
+                        row.payment_method === 'online'
+                          ? 'bg-blue-900/30 text-blue-400'
+                          : 'bg-dark-700 text-yellow-400'
+                      }`}>
+                        {row.payment_method === 'online' ? '📱 Online' : '💵 Cash'}
+                      </span>
+                    </td>
                     <td className="text-sm text-dark-300">{formatDate(row.created_at)}</td>
                   </tr>
                 ))}

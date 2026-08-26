@@ -62,6 +62,9 @@ export const InvoiceModel = {
         items,
         total,
         created_at,
+        payment_method,
+        cash_amount,
+        online_amount,
         customers!customer_id (
           birthday,
           anniversary
@@ -100,6 +103,9 @@ export const InvoiceModel = {
       items: row.items || [],
       total: row.total,
       created_at: row.created_at,
+      payment_method: row.payment_method || 'cash',
+      cash_amount: row.cash_amount ?? null,
+      online_amount: row.online_amount ?? null,
       birthday: row.customers?.birthday ?? null,
       anniversary: row.customers?.anniversary ?? null,
     }));

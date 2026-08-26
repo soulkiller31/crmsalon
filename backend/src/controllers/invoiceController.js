@@ -128,6 +128,9 @@ export const saveCustomerAndSendWhatsApp = asyncHandler(async (req, res) => {
     discount = 0,
     tax_rate = 0,
     notes,
+    payment_method = 'cash',
+    cash_amount = null,
+    online_amount = null,
     send_whatsapp = true,
   } = req.body;
 
@@ -172,6 +175,9 @@ export const saveCustomerAndSendWhatsApp = asyncHandler(async (req, res) => {
     tax: totals.tax,
     total: totals.total,
     notes: notes || null,
+    payment_method: ['cash', 'online', 'split'].includes(payment_method) ? payment_method : 'cash',
+    cash_amount: payment_method === 'split' ? (Math.round(Number(cash_amount) * 100) / 100 || 0) : null,
+    online_amount: payment_method === 'split' ? (Math.round(Number(online_amount) * 100) / 100 || 0) : null,
     whatsapp_sent: false,
   });
 
@@ -343,7 +349,7 @@ export const exportVisitReport = asyncHandler(async (req, res) => {
   const { utils, write } = await import('xlsx');
 
   const wsData = [
-    ['S.No', 'Customer Name', 'Phone', 'DOB', 'Anniversary', 'Services', 'Amount (Rs.)', 'Visit Date'],
+    ['S.No', 'Customer Name', 'Phone', 'DOB', 'Anniversary', 'Services', 'Amount (Rs.)', 'Payment', 'Visit Date'],
     ...rows.map((row, i) => [
       i + 1,
       row.customer_name,
@@ -352,6 +358,7 @@ export const exportVisitReport = asyncHandler(async (req, res) => {
       row.anniversary || '',
       (row.items || []).map(item => item.description).join(', '),
       Number(row.total),
+      row.payment_method || 'cash',
       new Date(row.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
     ]),
   ];
@@ -359,7 +366,7 @@ export const exportVisitReport = asyncHandler(async (req, res) => {
   const ws = utils.aoa_to_sheet(wsData);
   ws['!cols'] = [
     { wch: 6 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
-    { wch: 40 }, { wch: 14 }, { wch: 14 },
+    { wch: 40 }, { wch: 14 }, { wch: 12 }, { wch: 14 },
   ];
 
   const wb = utils.book_new();
@@ -380,6 +387,23 @@ export const getBusinessReport = asyncHandler(async (req, res) => {
   if (filter === 'custom' && (!start || !end)) throw new AppError('start and end required when filter=custom', 400);
 
   const rows = await InvoiceModel.getReport({ filter, start, end });
+
+  // Payment method breakdown — correctly handles split payments
+  let cashRevenue = 0, onlineRevenue = 0, cashCount = 0, onlineCount = 0, splitCount = 0;
+  rows.forEach(r => {
+    const total = Number(r.total);
+    if (r.payment_method === 'online') {
+      onlineRevenue += total;
+      onlineCount++;
+    } else if (r.payment_method === 'split') {
+      cashRevenue += Number(r.cash_amount) || 0;
+      onlineRevenue += Number(r.online_amount) || 0;
+      splitCount++;
+    } else {
+      cashRevenue += total;
+      cashCount++;
+    }
+  });
 
   // Total revenue and visits
   const totalRevenue = rows.reduce((sum, r) => sum + Number(r.total), 0);
@@ -445,6 +469,11 @@ export const getBusinessReport = asyncHandler(async (req, res) => {
         totalVisits,
         uniqueCustomers,
         avgPerVisit: Math.round(avgPerVisit * 100) / 100,
+        cashRevenue: Math.round(cashRevenue * 100) / 100,
+        onlineRevenue: Math.round(onlineRevenue * 100) / 100,
+        cashCount,
+        onlineCount,
+        splitCount,
       },
       topServices,
       topCustomers,
@@ -475,6 +504,25 @@ export const exportBusinessReport = asyncHandler(async (req, res) => {
     ['Total Visits', totalVisits],
     ['Unique Customers', uniqueCustomers],
     ['Avg per Visit (Rs.)', Math.round(avgPerVisit * 100) / 100],
+    ['Cash Revenue (Rs.)', (() => {
+      let c = 0;
+      rows.forEach(r => {
+        if (r.payment_method === 'split') c += Number(r.cash_amount) || 0;
+        else if (r.payment_method !== 'online') c += Number(r.total);
+      });
+      return Math.round(c * 100) / 100;
+    })()],
+    ['Online Revenue (Rs.)', (() => {
+      let o = 0;
+      rows.forEach(r => {
+        if (r.payment_method === 'split') o += Number(r.online_amount) || 0;
+        else if (r.payment_method === 'online') o += Number(r.total);
+      });
+      return Math.round(o * 100) / 100;
+    })()],
+    ['Cash Payments', rows.filter(r => r.payment_method === 'cash').length],
+    ['Online Payments', rows.filter(r => r.payment_method === 'online').length],
+    ['Split Payments', rows.filter(r => r.payment_method === 'split').length],
     ['Period', filter === 'custom' ? `${start} to ${end}` : filter],
     ['Generated On', new Date().toLocaleDateString('en-IN')],
   ];
