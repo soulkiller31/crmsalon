@@ -10,8 +10,8 @@ services:
   # ── Backend (Node.js + Express + Puppeteer) ──────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: salon-crm-backend
     restart: unless-stopped
     env_file:

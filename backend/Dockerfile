@@ -25,14 +25,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy package files first for layer caching
-COPY package.json package-lock.json ./
+# Copy backend dependencies
+COPY backend/package.json backend/package-lock.json ./
 
 # Install production deps only
 RUN npm ci --omit=dev
 
-# Copy source code
-COPY src/ ./src/
+# Copy backend source and database migrations
+COPY backend/src/ ./src/
+COPY supabase/migrations/ /supabase/migrations/
 
 # Tell Puppeteer to use the system Chrome (not download its own)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
