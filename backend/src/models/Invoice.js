@@ -52,7 +52,7 @@ export const InvoiceModel = {
     return data;
   },
 
-  async getReport({ filter = 'month', start, end } = {}) {
+  async getReport({ filter = 'month', start, end, phone } = {}) {
     let query = supabase
       .from(TABLE)
       .select(`
@@ -71,6 +71,8 @@ export const InvoiceModel = {
         )
       `)
       .order('created_at', { ascending: false });
+
+    if (phone?.trim()) query = query.ilike('customer_phone', `%${phone.trim()}%`);
 
     const now = new Date();
 

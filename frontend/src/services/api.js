@@ -38,6 +38,7 @@ export const authAPI = {
 
 export const customerAPI = {
   getAll: (params) => api.get('/customers', { params }),
+  getByPhone: (phone) => api.get('/customers/by-phone', { params: { phone } }),
   getById: (id) => api.get(`/customers/${id}`),
   create: (data) => api.post('/customers', data),
   update: (id, data) => api.put(`/customers/${id}`, data),

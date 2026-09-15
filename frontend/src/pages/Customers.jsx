@@ -20,6 +20,7 @@ function BusinessReportView() {
   const [filter, setFilter] = useState('month');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [phone, setPhone] = useState('');
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -33,7 +34,7 @@ function BusinessReportView() {
     setValidationError(null);
     setLoading(true);
     try {
-      const params = { filter };
+      const params = { filter, phone: phone.trim() };
       if (filter === 'custom') { params.start = startDate; params.end = endDate; }
       const { data } = await invoiceAPI.getBusinessReport(params);
       setReport(data.data);
@@ -47,12 +48,12 @@ function BusinessReportView() {
 
   useEffect(() => {
     fetchReport();
-  }, [filter, startDate, endDate]);
+  }, [filter, startDate, endDate, phone]);
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const params = { filter };
+      const params = { filter, phone: phone.trim() };
       if (filter === 'custom') { params.start = startDate; params.end = endDate; }
       const { data } = await invoiceAPI.exportBusinessReport(params);
       const url = window.URL.createObjectURL(new Blob([data]));
@@ -87,6 +88,15 @@ function BusinessReportView() {
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:w-56">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Search by customer number..."
+              className="pl-8 text-sm py-1.5"
+            />
+          </div>
           {[
             { key: 'today', label: 'Today' },
             { key: 'month', label: 'This Month' },

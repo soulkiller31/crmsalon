@@ -29,6 +29,15 @@ export const getCustomer = asyncHandler(async (req, res) => {
   res.json({ success: true, data: customer });
 });
 
+export const getCustomerByPhone = asyncHandler(async (req, res) => {
+  const phone = String(req.query.phone || '').trim();
+  if (!phone) throw new AppError('Phone number is required', 400);
+
+  const customer = await CustomerModel.findByPhone(phone);
+  if (!customer) throw new AppError('Customer not found', 404);
+  res.json({ success: true, data: customer });
+});
+
 export const createCustomer = asyncHandler(async (req, res) => {
   const existing = await CustomerModel.findByPhone(req.body.phone);
   if (existing) {

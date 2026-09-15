@@ -38,6 +38,7 @@ router.use(authenticate);
 router.get('/stats', customerController.getCustomerStats);
 router.get('/export', customerController.exportCustomers);
 router.post('/import', handleUpload, customerController.importCustomers);
+router.get('/by-phone', customerController.getCustomerByPhone);
 router.get('/', customerController.getCustomers);
 router.get('/:id', customerController.getCustomer);
 router.post('/', customerValidation, validate, customerController.createCustomer);

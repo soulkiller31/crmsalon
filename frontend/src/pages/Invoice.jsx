@@ -1,10 +1,10 @@
 ﻿import { useEffect, useState, useMemo, useRef } from 'react';
 import { Plus, Trash2, Send, RefreshCw, Download, FileText, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { invoiceAPI } from '../services/api';
+import { customerAPI, invoiceAPI } from '../services/api';
 
 const emptyItem = { description: '', quantity: 1, price: 0 };
-const emptyCustomer = { name: '', phone: '', birthday: '', anniversary: '', address: '', gender: '' };
+const emptyCustomer = { name: '', phone: '', email: '', birthday: '', anniversary: '', address: '', gender: '' };
 
 const CATALOGUE = [
   { cat: 'Waxing (Rica)', name: 'Full Body Wax - Rica', price: 2500 },
@@ -223,6 +223,7 @@ export default function Invoice() {
   const [invoiceNumber, setInvoiceNumber] = useState(null);
   const [loadingNumber, setLoadingNumber] = useState(true);
   const [customer, setCustomer] = useState(emptyCustomer);
+  const [lookingUpCustomer, setLookingUpCustomer] = useState(false);
   const [items, setItems] = useState([{ ...emptyItem }]);
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState('flat'); // 'flat' | 'pct'
@@ -255,6 +256,36 @@ export default function Invoice() {
   };
 
   useEffect(() => { fetchNextNumber(); fetchHistory(); }, []);
+
+  useEffect(() => {
+    const phone = customer.phone.trim();
+    if (phone.replace(/\D/g, '').length < 10) return undefined;
+
+    const timer = setTimeout(async () => {
+      setLookingUpCustomer(true);
+      try {
+        const { data } = await customerAPI.getByPhone(phone);
+        const found = data.data;
+        setCustomer((current) => ({
+          ...current,
+          name: found.name || '',
+          phone: found.phone || current.phone,
+          email: found.email || '',
+          birthday: found.birthday || '',
+          anniversary: found.anniversary || '',
+          address: found.address || '',
+          gender: found.gender || '',
+        }));
+        toast.success('Customer details filled automatically', { duration: 1800 });
+      } catch (err) {
+        if (err.response?.status !== 404) toast.error('Could not look up customer');
+      } finally {
+        setLookingUpCustomer(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [customer.phone]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum, it) => sum + (Number(it.quantity) || 0) * (Number(it.price) || 0), 0);
@@ -360,8 +391,15 @@ export default function Invoice() {
                   <input value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Phone *</label>
+                  <label className="form-label flex items-center justify-between">
+                    <span>Phone *</span>
+                    {lookingUpCustomer && <span className="text-xs text-dark-400">Looking up...</span>}
+                  </label>
                   <input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">DOB</label>
