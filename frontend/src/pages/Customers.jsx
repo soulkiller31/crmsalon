@@ -729,6 +729,7 @@ export default function Customers() {
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Email</th>
+                    <th>Visits</th>
                     <th>Birthday</th>
                     <th>Last Visit</th>
                     <th>Status</th>
@@ -741,6 +742,7 @@ export default function Customers() {
                       <td className="font-medium text-dark-100">{c.name}</td>
                       <td className="font-mono text-sm">{c.phone}</td>
                       <td className="text-dark-400">{c.email || '—'}</td>
+                      <td className="font-semibold text-accent">{c.visit_count ?? 0}</td>
                       <td>{c.birthday || '—'}</td>
                       <td>{c.last_visit || '—'}</td>
                       <td>

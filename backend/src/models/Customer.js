@@ -34,7 +34,7 @@ const isFollowUpDue = (customer, gender, minDaysSinceVisit) => {
 
 export const CustomerModel = {
   async findAll({ search, gender, isActive, page = 1, limit = 20, sortBy = 'created_at', sortOrder = 'desc' }) {
-    let query = supabase.from(TABLE).select('*', { count: 'exact' });
+    let query = supabase.from(TABLE).select('*, invoices(count)', { count: 'exact' });
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
@@ -54,7 +54,16 @@ export const CustomerModel = {
     const { data, error, count } = await query;
     if (error) throw new AppError('Failed to fetch customers', 500);
 
-    return { data: data || [], total: count || 0, page, limit };
+    return {
+      data: (data || []).map((customer) => ({
+        ...customer,
+        visit_count: customer.invoices?.[0]?.count || 0,
+        invoices: undefined,
+      })),
+      total: count || 0,
+      page,
+      limit,
+    };
   },
 
   async findById(id) {
@@ -64,9 +73,10 @@ export const CustomerModel = {
   },
 
   async findByPhone(phone) {
-    const { data, error } = await supabase.from(TABLE).select('*').eq('phone', phone).maybeSingle();
+    const { data, error } = await supabase.from(TABLE).select('*, invoices(count)').eq('phone', phone).maybeSingle();
     if (error) throw new AppError('Database error', 500);
-    return data;
+    if (!data) return data;
+    return { ...data, visit_count: data.invoices?.[0]?.count || 0, invoices: undefined };
   },
 
   async create(customer) {

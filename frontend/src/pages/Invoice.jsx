@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { customerAPI, invoiceAPI } from '../services/api';
 
 const emptyItem = { description: '', quantity: 1, price: 0 };
-const emptyCustomer = { name: '', phone: '', email: '', birthday: '', anniversary: '', address: '', gender: '' };
+const emptyCustomer = { name: '', phone: '', email: '', birthday: '', anniversary: '', address: '', gender: '', visit_count: 0 };
 
 const CATALOGUE = [
   { cat: 'Waxing (Rica)', name: 'Full Body Wax - Rica', price: 2500 },
@@ -275,10 +275,15 @@ export default function Invoice() {
           anniversary: found.anniversary || '',
           address: found.address || '',
           gender: found.gender || '',
+          visit_count: found.visit_count || 0,
         }));
         toast.success('Customer details filled automatically', { duration: 1800 });
       } catch (err) {
-        if (err.response?.status !== 404) toast.error('Could not look up customer');
+        if (err.response?.status === 404) {
+          setCustomer((current) => ({ ...emptyCustomer, phone: current.phone }));
+        } else {
+          toast.error('Could not look up customer');
+        }
       } finally {
         setLookingUpCustomer(false);
       }
@@ -384,7 +389,12 @@ export default function Invoice() {
 
           <form onSubmit={handleSaveAndSend} className="space-y-4">
             <div className="card">
-              <h2 className="text-lg font-semibold text-dark-100 mb-4">Customer Details</h2>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="text-lg font-semibold text-dark-100">Customer Details</h2>
+                {customer.visit_count > 0 && (
+                  <span className="badge-success">Previous visits: {customer.visit_count}</span>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="form-group sm:col-span-2">
                   <label className="form-label">Name *</label>
