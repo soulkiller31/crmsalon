@@ -1,5 +1,6 @@
 import supabase from '../config/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { normalizePhoneNumber } from '../utils/phone.js';
 
 const TABLE = 'invoices';
 
@@ -52,7 +53,7 @@ export const InvoiceModel = {
     return data;
   },
 
-  async getReport({ filter = 'month', start, end, phone } = {}) {
+  async getReport({ filter = 'month', start, end, phone, search } = {}) {
     let query = supabase
       .from(TABLE)
       .select(`
@@ -72,7 +73,12 @@ export const InvoiceModel = {
       `)
       .order('created_at', { ascending: false });
 
-    if (phone?.trim()) query = query.ilike('customer_phone', `%${phone.trim()}%`);
+    const queryText = String(search || phone || '').trim();
+    if (queryText) {
+      const normalizedPhone = normalizePhoneNumber(queryText);
+      const searchValue = normalizedPhone || queryText;
+      query = query.or(`customer_phone.ilike.%${searchValue}%,customer_name.ilike.%${searchValue}%`);
+    }
 
     const now = new Date();
 

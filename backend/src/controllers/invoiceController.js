@@ -321,7 +321,7 @@ export const resendInvoicePdf = asyncHandler(async (req, res) => {
 });
 
 export const getInvoiceReport = asyncHandler(async (req, res) => {
-  const { filter = 'month', start, end, phone } = req.query;
+  const { filter = 'month', start, end, phone, search } = req.query;
 
   const VALID = ['today', 'month', 'all', 'custom'];
   if (!VALID.includes(filter)) {
@@ -332,12 +332,12 @@ export const getInvoiceReport = asyncHandler(async (req, res) => {
     throw new AppError('start and end query params are required when filter=custom', 400);
   }
 
-  const rows = await InvoiceModel.getReport({ filter, start, end, phone });
+  const rows = await InvoiceModel.getReport({ filter, start, end, phone, search });
   res.json({ success: true, data: rows });
 });
 
 export const exportVisitReport = asyncHandler(async (req, res) => {
-  const { filter = 'month', start, end, phone } = req.query;
+  const { filter = 'month', start, end, phone, search } = req.query;
 
   const VALID = ['today', 'month', 'all', 'custom'];
   if (!VALID.includes(filter)) throw new AppError(`Invalid filter "${filter}"`, 400);

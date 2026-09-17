@@ -1,5 +1,6 @@
 import supabase from '../config/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { normalizePhoneNumber } from '../utils/phone.js';
 
 const TABLE = 'customers';
 
@@ -73,20 +74,30 @@ export const CustomerModel = {
   },
 
   async findByPhone(phone) {
-    const { data, error } = await supabase.from(TABLE).select('*, invoices(count)').eq('phone', phone).maybeSingle();
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!normalizedPhone) return null;
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*, invoices(count)')
+      .or(`phone.eq.${normalizedPhone},phone.eq.${normalizedPhone.slice(-10)}`)
+      .maybeSingle();
+
     if (error) throw new AppError('Database error', 500);
     if (!data) return data;
     return { ...data, visit_count: data.invoices?.[0]?.count || 0, invoices: undefined };
   },
 
   async create(customer) {
-    const { data, error } = await supabase.from(TABLE).insert(customer).select().single();
+    const safePhone = normalizePhoneNumber(customer.phone);
+    const { data, error } = await supabase.from(TABLE).insert({ ...customer, phone: safePhone }).select().single();
     if (error) throw new AppError(error.message || 'Failed to create customer', 500);
     return data;
   },
 
   async update(id, updates) {
-    const { data, error } = await supabase.from(TABLE).update(updates).eq('id', id).select().single();
+    const safeUpdates = updates.phone ? { ...updates, phone: normalizePhoneNumber(updates.phone) } : updates;
+    const { data, error } = await supabase.from(TABLE).update(safeUpdates).eq('id', id).select().single();
     if (error) throw new AppError('Failed to update customer', 500);
     return data;
   },

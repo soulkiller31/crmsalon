@@ -1,6 +1,7 @@
 import { CustomerModel } from '../models/Customer.js';
 import { ExcelService } from '../services/excelService.js';
 import { asyncHandler, AppError } from '../middleware/errorHandler.js';
+import { normalizePhoneNumber } from '../utils/phone.js';
 
 const normalizeGender = (gender) => {
   if (gender === undefined) return undefined;
@@ -30,7 +31,7 @@ export const getCustomer = asyncHandler(async (req, res) => {
 });
 
 export const getCustomerByPhone = asyncHandler(async (req, res) => {
-  const phone = String(req.query.phone || '').trim();
+  const phone = normalizePhoneNumber(req.query.phone);
   if (!phone) throw new AppError('Phone number is required', 400);
 
   const customer = await CustomerModel.findByPhone(phone);
@@ -39,29 +40,33 @@ export const getCustomerByPhone = asyncHandler(async (req, res) => {
 });
 
 export const createCustomer = asyncHandler(async (req, res) => {
-  const existing = await CustomerModel.findByPhone(req.body.phone);
+  const normalizedPhone = normalizePhoneNumber(req.body.phone);
+  const existing = await CustomerModel.findByPhone(normalizedPhone);
   if (existing) {
     throw new AppError('Customer with this phone number already exists', 409);
   }
 
   const customer = await CustomerModel.create({
     ...req.body,
+    phone: normalizedPhone,
     gender: normalizeGender(req.body.gender),
   });
   res.status(201).json({ success: true, message: 'Customer created', data: customer });
 });
 
 export const updateCustomer = asyncHandler(async (req, res) => {
-  if (req.body.phone) {
-    const existing = await CustomerModel.findByPhone(req.body.phone);
+  const payload = { ...req.body };
+  if (payload.phone) {
+    payload.phone = normalizePhoneNumber(payload.phone);
+    const existing = await CustomerModel.findByPhone(payload.phone);
     if (existing && existing.id !== req.params.id) {
       throw new AppError('Phone number already in use', 409);
     }
   }
 
   const customer = await CustomerModel.update(req.params.id, {
-    ...req.body,
-    gender: normalizeGender(req.body.gender),
+    ...payload,
+    gender: normalizeGender(payload.gender),
   });
   res.json({ success: true, message: 'Customer updated', data: customer });
 });

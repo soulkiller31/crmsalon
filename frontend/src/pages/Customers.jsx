@@ -306,6 +306,7 @@ function CustomerReportView() {
   const [filter, setFilter] = useState('month');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [search, setSearch] = useState('');
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState(null);
@@ -319,7 +320,7 @@ function CustomerReportView() {
     setValidationError(null);
     setLoading(true);
     try {
-      const params = { filter };
+      const params = { filter, search: search.trim() };
       if (filter === 'custom') { params.start = startDate; params.end = endDate; }
       const { data } = await invoiceAPI.getReport(params);
       setRows(data.data || []);
@@ -333,12 +334,12 @@ function CustomerReportView() {
 
   useEffect(() => {
     fetchReport();
-  }, [filter, startDate, endDate]);
+  }, [filter, startDate, endDate, search]);
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const params = { filter };
+      const params = { filter, search: search.trim() };
       if (filter === 'custom') { params.start = startDate; params.end = endDate; }
       const { data } = await invoiceAPI.exportReport(params);
       const url = window.URL.createObjectURL(new Blob([data]));
@@ -378,6 +379,15 @@ function CustomerReportView() {
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:w-64">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name or phone..."
+              className="pl-8 text-sm py-1.5"
+            />
+          </div>
           {[
             { key: 'today', label: 'Today' },
             { key: 'month', label: 'This Month' },

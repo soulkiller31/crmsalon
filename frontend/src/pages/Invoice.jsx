@@ -6,6 +6,8 @@ import { customerAPI, invoiceAPI } from '../services/api';
 const emptyItem = { description: '', quantity: 1, price: 0 };
 const emptyCustomer = { name: '', phone: '', email: '', birthday: '', anniversary: '', address: '', gender: '', visit_count: 0 };
 
+const normalizePhoneInput = (value) => String(value || '').replace(/\D/g, '').slice(-10);
+
 const CATALOGUE = [
   { cat: 'Waxing (Rica)', name: 'Full Body Wax - Rica', price: 2500 },
   { cat: 'Waxing (Rica)', name: 'Full Arms Wax - Rica', price: 400 },
@@ -258,8 +260,8 @@ export default function Invoice() {
   useEffect(() => { fetchNextNumber(); fetchHistory(); }, []);
 
   useEffect(() => {
-    const phone = customer.phone.trim();
-    if (phone.replace(/\D/g, '').length < 10) return undefined;
+    const phone = normalizePhoneInput(customer.phone);
+    if (phone.length < 10) return undefined;
 
     const timer = setTimeout(async () => {
       setLookingUpCustomer(true);
@@ -269,7 +271,7 @@ export default function Invoice() {
         setCustomer((current) => ({
           ...current,
           name: found.name || '',
-          phone: found.phone || current.phone,
+          phone: normalizePhoneInput(found.phone || current.phone),
           email: found.email || '',
           birthday: found.birthday || '',
           anniversary: found.anniversary || '',
@@ -280,7 +282,7 @@ export default function Invoice() {
         toast.success('Customer details filled automatically', { duration: 1800 });
       } catch (err) {
         if (err.response?.status === 404) {
-          setCustomer((current) => ({ ...emptyCustomer, phone: current.phone }));
+          setCustomer((current) => ({ ...emptyCustomer, phone: normalizePhoneInput(current.phone) }));
         } else {
           toast.error('Could not look up customer');
         }
@@ -405,7 +407,11 @@ export default function Invoice() {
                     <span>Phone *</span>
                     {lookingUpCustomer && <span className="text-xs text-dark-400">Looking up...</span>}
                   </label>
-                  <input value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value })} required />
+                  <input
+                    value={customer.phone}
+                    onChange={(e) => setCustomer({ ...customer, phone: normalizePhoneInput(e.target.value) })}
+                    required
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email</label>
