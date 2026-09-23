@@ -97,6 +97,8 @@ sudo apt install -y nginx curl build-essential ca-certificates
 sudo DEPLOY_DIR=/var/www/salon-crm ./hostinger_deploy.sh
 ```
 
+For later releases, run the same command from `/var/www/salon-crm`; the script fetches and fast-forwards `origin/main` before rebuilding. Use `BRANCH=your-branch` when deploying a different branch, and verify the printed commit hash before testing the site.
+
 5. Nginx: use the included `nginx.conf` (or your custom site file) to serve static files from `$DEPLOY_DIR/public` and reverse-proxy `/api` to the backend port (default `5000`). Enable and reload nginx:
 
 ```bash

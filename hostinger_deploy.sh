@@ -1,17 +1,29 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 # Hostinger VPS deployment helper
-# Usage: sudo DEPLOY_DIR=/var/www/salon-crm ./hostinger_deploy.sh
+# Usage: sudo DEPLOY_DIR=/var/www/salon-crm BRANCH=main ./hostinger_deploy.sh
 
 DEPLOY_DIR=${DEPLOY_DIR:-/var/www/salon-crm}
-FRONTEND_DIR=frontend
-BACKEND_DIR=backend
+BRANCH=${BRANCH:-main}
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+REPO_DIR=$(cd -- "$SCRIPT_DIR" && pwd)
+
+if [[ "$REPO_DIR" != "$DEPLOY_DIR" ]]; then
+  echo "Error: run this script from the deployed repository at $DEPLOY_DIR."
+  echo "Current repository: $REPO_DIR"
+  exit 1
+fi
 
 echo "Deploy directory: $DEPLOY_DIR"
 
+echo "Updating source from origin/$BRANCH..."
+git -C "$REPO_DIR" fetch origin "$BRANCH"
+git -C "$REPO_DIR" pull --ff-only origin "$BRANCH"
+echo "Deploying commit: $(git -C "$REPO_DIR" rev-parse --short HEAD)"
+
 echo "Building frontend..."
-cd "$FRONTEND_DIR"
+cd "$REPO_DIR/frontend"
 npm ci
 npm run build
 
@@ -20,7 +32,7 @@ sudo mkdir -p "$DEPLOY_DIR/public"
 sudo rm -rf "$DEPLOY_DIR/public"/* || true
 sudo cp -r dist/* "$DEPLOY_DIR/public/"
 
-cd ../$BACKEND_DIR
+cd "$REPO_DIR/backend"
 echo "Installing backend dependencies..."
 npm ci
 
