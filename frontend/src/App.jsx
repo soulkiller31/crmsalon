@@ -10,6 +10,7 @@ import WhatsApp from './pages/WhatsApp';
 import Templates from './pages/Templates';
 import MessageLogs from './pages/MessageLogs';
 import Invoice from './pages/Invoice';
+import Services from './pages/Services';
 
 export default function App() {
   return (
@@ -74,6 +75,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Layout><Invoice /></Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/services"
+            element={
+              <ProtectedRoute>
+                <Layout><Services /></Layout>
               </ProtectedRoute>
             }
           />

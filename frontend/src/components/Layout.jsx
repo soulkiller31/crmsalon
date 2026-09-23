@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, MessageSquare, FileText, Smartphone,
-  LogOut, Menu, X, Scissors, Receipt,
+  LogOut, Menu, X, Scissors, Receipt, Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/customers', icon: Users, label: 'Customers' },
   { to: '/invoice', icon: Receipt, label: 'Invoice' },
+  { to: '/services', icon: Sparkles, label: 'Services' },
   { to: '/whatsapp', icon: Smartphone, label: 'WhatsApp' },
   { to: '/templates', icon: FileText, label: 'Templates' },
   { to: '/message-logs', icon: MessageSquare, label: 'Message Logs' },

@@ -9,6 +9,10 @@ export const AuthService = {
     const normalizedEmail = email?.trim().toLowerCase();
     const normalizedPassword = password;
 
+    if (normalizedEmail !== config.admin.email) {
+      throw new AppError('Invalid email or password', 401);
+    }
+
     let admin = null;
 
     try {

@@ -54,7 +54,7 @@ export default {
   whatsappSessionPath: process.env.WHATSAPP_SESSION_PATH || './.wwebjs_auth',
   cronTimezone: process.env.CRON_TIMEZONE || 'Asia/Kolkata',
   admin: {
-    email: process.env.ADMIN_EMAIL || (isProduction ? undefined : 'admin@salon.com'),
+    email: 'admin@salon.com',
     password: process.env.ADMIN_PASSWORD || (isProduction ? undefined : 'Admin@123456'),
     name: process.env.ADMIN_NAME || (isProduction ? undefined : 'Salon Admin'),
   },

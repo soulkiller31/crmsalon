@@ -13,6 +13,10 @@ export const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, config.jwt.secret);
 
+    if (decoded.email?.trim().toLowerCase() !== config.admin.email) {
+      throw new AppError('Access denied.', 401);
+    }
+
     req.admin = {
       id: decoded.id,
       email: decoded.email,
