@@ -62,6 +62,13 @@ export const templateAPI = {
   delete: (id) => api.delete(`/templates/${id}`),
 };
 
+export const serviceAPI = {
+  getAll: () => api.get('/services'),
+  create: (data) => api.post('/services', data),
+  update: (id, data) => api.put(`/services/${id}`, data),
+  delete: (id) => api.delete(`/services/${id}`),
+};
+
 export const messageLogAPI = {
   getAll: (params) => api.get('/message-logs', { params }),
   getStats: () => api.get('/message-logs/stats'),

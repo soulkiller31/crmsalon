@@ -5,6 +5,7 @@ import templateRoutes from './templateRoutes.js';
 import messageLogRoutes from './messageLogRoutes.js';
 import whatsappRoutes from './whatsappRoutes.js';
 import invoiceRoutes from './invoiceRoutes.js';
+import serviceRoutes from './serviceRoutes.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/templates', templateRoutes);
 router.use('/message-logs', messageLogRoutes);
 router.use('/whatsapp', whatsappRoutes);
 router.use('/invoices', invoiceRoutes);
+router.use('/services', serviceRoutes);
 
 export default router;

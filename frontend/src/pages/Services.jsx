@@ -1,33 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Pencil, Scissors, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Modal from '../components/Modal';
 import ConfirmDialog from '../components/ConfirmDialog';
-
-const defaultServices = [
-  { id: 1, name: 'Haircut', category: 'Hair', duration: '45 min', price: '500' },
-  { id: 2, name: 'Hair Coloring', category: 'Hair', duration: '90 min', price: '1,500' },
-  { id: 3, name: 'Facial', category: 'Skin', duration: '60 min', price: '1,000' },
-  { id: 4, name: 'Manicure', category: 'Nails', duration: '45 min', price: '600' },
-  { id: 5, name: 'Pedicure', category: 'Nails', duration: '60 min', price: '800' },
-  { id: 6, name: 'Bridal Package', category: 'Packages', duration: '180 min', price: '5,000' },
-];
+import LoadingSpinner from '../components/LoadingSpinner';
+import { serviceAPI } from '../services/api';
 
 const emptyForm = { name: '', category: 'Hair', duration: '', price: '' };
 
 export default function Services() {
-  const [services, setServices] = useState(() => {
-    const stored = localStorage.getItem('salon-services');
-    return stored ? JSON.parse(stored) : defaultServices;
-  });
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const saveServices = (nextServices) => {
-    setServices(nextServices);
-    localStorage.setItem('salon-services', JSON.stringify(nextServices));
-  };
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const { data } = await serviceAPI.getAll();
+        setServices(data.data);
+      } catch {
+        toast.error('Failed to load services');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
 
   const openCreate = () => {
     setSelected(null);
@@ -41,19 +44,38 @@ export default function Services() {
     setModalOpen(true);
   };
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault();
-    const nextService = { ...form, id: selected?.id || Date.now() };
-    saveServices(selected
-      ? services.map((service) => service.id === selected.id ? nextService : service)
-      : [...services, nextService]);
-    setModalOpen(false);
+    setSaving(true);
+    try {
+      const { data } = selected
+        ? await serviceAPI.update(selected.id, form)
+        : await serviceAPI.create({ ...form, price: Number(form.price) });
+      setServices((current) => selected
+        ? current.map((service) => service.id === selected.id ? data.data : service)
+        : [...current, data.data]);
+      setModalOpen(false);
+      toast.success(selected ? 'Service updated' : 'Service added');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save service');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = () => {
-    saveServices(services.filter((service) => service.id !== selected.id));
-    setDeleteOpen(false);
-    setSelected(null);
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await serviceAPI.delete(selected.id);
+      setServices((current) => current.filter((service) => service.id !== selected.id));
+      setDeleteOpen(false);
+      setSelected(null);
+      toast.success('Service deleted');
+    } catch {
+      toast.error('Failed to delete service');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -66,7 +88,9 @@ export default function Services() {
         <button onClick={openCreate} className="btn-primary"><Plus size={16} /> Add Service</button>
       </div>
 
-      {services.length === 0 ? (
+      {loading ? (
+        <div className="flex justify-center py-12"><LoadingSpinner /></div>
+      ) : services.length === 0 ? (
         <div className="card text-center py-12 text-dark-400">
           <Scissors size={32} className="mx-auto mb-3 opacity-50" />
           <p>No services added yet</p>
@@ -104,12 +128,12 @@ export default function Services() {
             <div className="form-group"><label className="form-label">Category</label><input value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} /></div>
             <div className="form-group"><label className="form-label">Duration</label><input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="45 min" /></div>
           </div>
-          <div className="form-group"><label className="form-label">Price *</label><input value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required /></div>
-          <div className="flex justify-end gap-3"><button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">Cancel</button><button type="submit" className="btn-primary">{selected ? 'Update' : 'Add'} Service</button></div>
+          <div className="form-group"><label className="form-label">Price *</label><input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} required /></div>
+          <div className="flex justify-end gap-3"><button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">Cancel</button><button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving...' : `${selected ? 'Update' : 'Add'} Service`}</button></div>
         </form>
       </Modal>
 
-      <ConfirmDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} title="Delete Service" message={`Are you sure you want to delete "${selected?.name}"?`} />
+      <ConfirmDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={handleDelete} title="Delete Service" message={`Are you sure you want to delete "${selected?.name}"?`} loading={deleting} />
     </div>
   );
 }

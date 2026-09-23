@@ -47,6 +47,13 @@ export const templateValidation = [
   body('is_active').optional().isBoolean(),
 ];
 
+export const serviceValidation = [
+  body('name').trim().notEmpty().withMessage('Service name is required'),
+  body('category').optional().trim().notEmpty().withMessage('Category cannot be empty'),
+  body('duration').optional({ nullable: true }).trim(),
+  body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
+];
+
 export const testMessageValidation = [
   body('phone').trim().notEmpty().withMessage('Phone is required'),
   body('message').trim().notEmpty().withMessage('Message is required'),
