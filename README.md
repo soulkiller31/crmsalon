@@ -33,8 +33,6 @@ npm install
 npm run dev
 ```
 
-Login: `admin@salon.com` / `Admin@123456`
-
 ## Production Deployment (Hostinger VPS)
 
 See `deploy.sh` for automated setup. Manual steps:
