@@ -1,10 +1,9 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, MessageSquare, FileText, Smartphone,
-  LogOut, Menu, X, Scissors, Receipt, Sparkles,
+  Menu, X, Scissors, Receipt, Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -17,14 +16,7 @@ const navItems = [
 ];
 
 export default function Layout({ children }) {
-  const { admin, logout } = useAuth();
-  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const sidebar = (
     <aside className="flex flex-col h-full bg-dark-900 border-r border-dark-700">
@@ -59,21 +51,7 @@ export default function Layout({ children }) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-dark-700">
-        <div className="flex items-center gap-3 px-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-sm font-bold">
-            {admin?.name?.charAt(0)?.toUpperCase() || 'A'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-dark-100 truncate">{admin?.name}</p>
-            <p className="text-xs text-dark-400 truncate">{admin?.email}</p>
-          </div>
-        </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-dark-400 hover:bg-dark-800 hover:text-red-400 transition-colors">
-          <LogOut size={16} />
-          Logout
-        </button>
-      </div>
+      <div className="p-4 border-t border-dark-700 text-xs text-dark-400">Salon management</div>
     </aside>
   );
 

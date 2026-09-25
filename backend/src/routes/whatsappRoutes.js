@@ -1,12 +1,9 @@
 import { Router } from 'express';
 import * as whatsappController from '../controllers/whatsappController.js';
-import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { testMessageValidation, manualMessageValidation } from '../validators/index.js';
 
 const router = Router();
-
-router.use(authenticate);
 
 router.get('/dashboard', whatsappController.getDashboardStats);
 router.get('/settings', whatsappController.getSettings);

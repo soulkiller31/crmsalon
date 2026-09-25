@@ -22,19 +22,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('admin');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
     }
     return Promise.reject(error);
   }
 );
-
-export const authAPI = {
-  login: (data) => api.post('/auth/login', data),
-  getProfile: () => api.get('/auth/profile'),
-  verify: () => api.get('/auth/verify'),
-};
 
 export const customerAPI = {
   getAll: (params) => api.get('/customers', { params }),

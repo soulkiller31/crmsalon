@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
 import * as customerController from '../controllers/customerController.js';
-import { authenticate } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { customerValidation } from '../validators/index.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -32,8 +31,6 @@ const handleUpload = (req, res, next) => {
     next();
   });
 };
-
-router.use(authenticate);
 
 router.get('/stats', customerController.getCustomerStats);
 router.get('/export', customerController.exportCustomers);

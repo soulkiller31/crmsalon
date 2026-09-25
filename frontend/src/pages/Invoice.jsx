@@ -237,9 +237,6 @@ export default function Invoice() {
   const [discountType, setDiscountType] = useState('flat'); // 'flat' | 'pct'
   const [taxRate, setTaxRate] = useState(0);
   const [notes, setNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [cashAmt, setCashAmt] = useState('');
-  const [onlineAmt, setOnlineAmt] = useState('');
   const [saving, setSaving] = useState(false);
   const [invoiceHistory, setInvoiceHistory] = useState([]);
   const [downloading, setDownloading] = useState(null);
@@ -326,9 +323,6 @@ export default function Invoice() {
   const resetForm = (nextNum) => {
     setCustomer(emptyCustomer); setItems([{ ...emptyItem }]);
     setDiscount(0); setTaxRate(0); setNotes('');
-    setPaymentMethod('cash');
-    setCashAmt('');
-    setOnlineAmt('');
     if (nextNum) setInvoiceNumber(nextNum); else fetchNextNumber();
     fetchHistory();
   };
@@ -369,7 +363,6 @@ export default function Invoice() {
         items: items.map((it) => ({ description: it.description, quantity: Number(it.quantity), price: Number(it.price) })),
         discount: totals.discAmt, tax_rate: Number(taxRate) || 0,
         notes: notes || null, send_whatsapp: true,
-        payment_method: paymentMethod,
       });
       toast.success(data.message || 'Saved and sent via WhatsApp');
       resetForm(data.data.next_invoice_number);
@@ -503,29 +496,6 @@ export default function Invoice() {
                   <input type="number" min="0" max="100" step="0.01" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} />
                 </div>
               </div>
-              <div className="form-group mt-2">
-                <label className="form-label">Payment Method</label>
-                <div className="flex gap-2 mt-1">
-                  <button type="button"
-                    onClick={() => setPaymentMethod('cash')}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      paymentMethod === 'cash'
-                        ? 'bg-accent text-white border-accent'
-                        : 'border-dark-600 text-dark-300 hover:bg-dark-700'
-                    }`}>
-                    💵 Cash
-                  </button>
-                  <button type="button"
-                    onClick={() => setPaymentMethod('online')}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      paymentMethod === 'online'
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'border-dark-600 text-dark-300 hover:bg-dark-700'
-                    }`}>
-                    📱 Online
-                  </button>
-                </div>
-              </div>
               <div className="form-group mt-4">
                 <label className="form-label">Notes</label>
                 <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -595,12 +565,6 @@ export default function Invoice() {
             {Number(taxRate) > 0 && <div className="flex justify-between"><span className="text-gray-500">Tax ({taxRate}%)</span><span>Rs.{totals.tax.toFixed(2)}</span></div>}
             <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200 mt-2"><span>Total</span><span>Rs.{totals.total.toFixed(2)}</span></div>
           </div>
-          <div className="flex justify-between text-sm mt-2 pt-2 border-t border-gray-100">
-            <span className="text-gray-500">Payment</span>
-            <span className={`font-medium ${paymentMethod === 'online' ? 'text-blue-600' : 'text-gray-700'}`}>
-              {paymentMethod === 'online' ? '📱 Online' : '💵 Cash'}
-            </span>
-          </div>
           {notes && <p className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">{notes}</p>}
         </div>
       </div>
@@ -612,7 +576,7 @@ export default function Invoice() {
           </h2>
           <div className="table-container">
             <table className="data-table">
-              <thead><tr><th>Invoice #</th><th>Customer</th><th>Phone</th><th>Total</th><th>Date</th><th>WhatsApp</th><th>Payment</th><th className="text-right">Actions</th></tr></thead>
+              <thead><tr><th>Invoice #</th><th>Customer</th><th>Phone</th><th>Total</th><th>Date</th><th>WhatsApp</th><th className="text-right">Actions</th></tr></thead>
               <tbody>
                 {invoiceHistory.map((inv) => (
                   <tr key={inv.id}>
@@ -622,15 +586,6 @@ export default function Invoice() {
                     <td className="font-semibold">Rs.{Number(inv.total).toFixed(2)}</td>
                     <td className="text-sm text-dark-400">{new Date(inv.created_at).toLocaleDateString('en-IN')}</td>
                     <td><span className={inv.whatsapp_sent ? 'badge-success' : 'badge-danger'}>{inv.whatsapp_sent ? 'Sent' : 'Not Sent'}</span></td>
-                    <td>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                        inv.payment_method === 'online'
-                          ? 'bg-blue-900/30 text-blue-400'
-                          : 'bg-dark-700 text-dark-300'
-                      }`}>
-                        {inv.payment_method === 'online' ? '📱 Online' : '💵 Cash'}
-                      </span>
-                    </td>
                     <td className="text-right">
                       <div className="flex justify-end gap-1">
                         <button onClick={() => handleDownloadPdf(inv.id, inv.invoice_number)} disabled={downloading === inv.id}
