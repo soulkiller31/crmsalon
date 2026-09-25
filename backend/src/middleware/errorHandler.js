@@ -15,15 +15,20 @@ export const notFound = (req, res, next) => {
 };
 
 export const errorHandler = (err, req, res, _next) => {
+  console.error('Unhandled Error:', err.stack || err.message || err);
+
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid JSON payload format',
+    });
+  }
+
   const statusCode = err.statusCode || 500;
   const isDev = process.env.NODE_ENV !== 'production';
   const message = err.isOperational
     ? err.message
     : (isDev ? err.message : 'Internal server error') || 'Internal server error';
-
-  if (isDev) {
-    console.error('[Error]', err);
-  }
 
   res.status(statusCode).json({
     success: false,

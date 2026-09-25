@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
   }, [verifyAuth]);
 
   const login = async (email, password) => {
-    const { data } = await authAPI.login({ email, password });
+    const { data } = await authAPI.login(JSON.stringify({ email, password }));
     localStorage.setItem('token', data.data.token);
     localStorage.setItem('admin', JSON.stringify(data.data.admin));
     setAdmin(data.data.admin);
