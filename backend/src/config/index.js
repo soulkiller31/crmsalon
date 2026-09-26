@@ -1,5 +1,16 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const backendDir = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const defaultEnvPath = resolve(backendDir, '.env');
+const productionEnvPath = resolve(backendDir, '.env.production');
+const envPath = process.env.NODE_ENV === 'production' && existsSync(productionEnvPath)
+  ? productionEnvPath
+  : defaultEnvPath;
+
+dotenv.config({ path: envPath });
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
