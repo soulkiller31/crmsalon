@@ -86,10 +86,10 @@ if [ "$MODE" = "docker" ]; then
   docker compose ps
 
   echo ""
-  echo "[10/11] Configuring Nginx SSL proxy..."
-  cp "$APP_DIR/nginx.conf" /etc/nginx/nginx.conf
-  nginx -t && systemctl restart nginx
-  systemctl enable nginx
+  echo "[10/11] Ensuring Docker Nginx owns port 80/443..."
+  systemctl stop nginx 2>/dev/null || true
+  systemctl disable nginx 2>/dev/null || true
+  nginx -t 2>/dev/null || true
 
   echo ""
   echo "[11/11] Configuring firewall..."
